@@ -1,10 +1,12 @@
+
 let entriesData = [];
 const activeCards = [];
 let flyAnimationId = null;
 
-// Track scroll positions
+// Track scroll positions for mobile modal restore
 let savedStageScroll = 0;
 let savedWindowScroll = 0;
+let isListView = false;
 
 document.addEventListener('DOMContentLoaded', () => {
   initSite();
@@ -14,9 +16,11 @@ async function initSite() {
   const closeBtn = document.getElementById('detail-close-btn');
   const backdrop = document.getElementById('detail-backdrop');
   const stage = document.getElementById('entries-panel');
+  const toggleBtn = document.getElementById('view-toggle-btn');
 
   if (closeBtn) closeBtn.addEventListener('click', closeDetail);
   if (backdrop) backdrop.addEventListener('click', closeDetail);
+  if (toggleBtn) toggleBtn.addEventListener('click', toggleDesktopView);
 
   if (stage) {
     stage.addEventListener('click', (e) => {
@@ -34,23 +38,31 @@ async function initSite() {
     if (window.innerWidth <= 768 && flyAnimationId) {
       cancelAnimationFrame(flyAnimationId);
       flyAnimationId = null;
-    } else if (window.innerWidth > 768 && !flyAnimationId && activeCards.length > 0) {
+    } else if (window.innerWidth > 768 && !flyAnimationId && activeCards.length > 0 && !isListView) {
       animate();
     }
   });
 
   try {
-    const response = await fetch('./data/entries.json');
+    // Relative path lookup ensures data loads correctly under subfolder hosts like GitHub Pages
+    const response = await fetch('./content/entries.json');
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const data = await response.json();
-    entriesData = data.entries || data;
+    entriesData = Array.isArray(data) ? data : (data.entries || []);
 
     renderEntries(entriesData);
   } catch (err) {
     console.error('Error loading JSON data:', err);
   }
+}
+
+// Helper to normalize image paths saved via Pages CMS or manual relative entry
+function resolveImagePath(path) {
+  if (!path) return '';
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  return path.startsWith('/') ? `.${path}` : `./${path}`;
 }
 
 function renderEntries(entries) {
@@ -63,8 +75,8 @@ function renderEntries(entries) {
   const mobileHeader = document.createElement('div');
   mobileHeader.className = 'mobile-intro-header';
   mobileHeader.innerHTML = `
-    <h1>Selected Works</h1>
-    <p>Select a project below to inspect details.</p>
+    <h1>Selected Reviews</h1>
+    <p>Select a book below to inspect its details and read the review.</p>
   `;
   stage.appendChild(mobileHeader);
 
@@ -73,18 +85,22 @@ function renderEntries(entries) {
   const cardWidth = 160;
   const cardHeight = 220;
 
-  entries.forEach((entry) => {
+  entries.forEach((entry, index) => {
     const card = document.createElement('article');
     card.className = 'entry-card';
-    card.setAttribute('data-slug', entry.slug);
+    
+    // Fallback slug generation if slug is omitted in JSON
+    const cardSlug = entry.slug || `entry-${index}`;
+    card.setAttribute('data-slug', cardSlug);
 
-    const mediaHTML = entry.media_type === 'video'
-      ? `<video src="${entry.cover_image}" autoplay muted loop playsinline></video>`
-      : `<img class="entry-image" src="${entry.cover_image}" alt="${entry.title || 'Project entry'}">`;
+    const imageSrc = resolveImagePath(entry.cover_image);
+    const mediaHTML = imageSrc
+      ? `<img class="entry-image" src="${imageSrc}" alt="${entry.title || 'Book cover'}">`
+      : '';
 
     card.innerHTML = `
       ${mediaHTML}
-      <h2>${entry.title || ''}</h2>
+      <h2>${entry.title || 'Untitled'}</h2>
     `;
 
     const speedMultiplier = 0.5;
@@ -94,7 +110,7 @@ function renderEntries(entries) {
       y: Math.random() * Math.max(0, stageHeight - cardHeight),
       vx: (Math.random() - 0.5) * speedMultiplier,
       vy: (Math.random() - 0.5) * speedMultiplier,
-      slug: entry.slug
+      slug: cardSlug
     };
 
     if (Math.abs(state.vx) < 0.15) state.vx = state.vx < 0 ? -0.2 : 0.2;
@@ -103,21 +119,21 @@ function renderEntries(entries) {
     card.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      showDetail(entry.slug);
+      showDetail(cardSlug);
     });
 
     stage.appendChild(card);
     activeCards.push(state);
   });
 
-  if (window.innerWidth > 768) {
+  if (window.innerWidth > 768 && !isListView) {
     if (flyAnimationId) cancelAnimationFrame(flyAnimationId);
     animate();
   }
 }
 
 function animate() {
-  if (window.innerWidth <= 768) return;
+  if (window.innerWidth <= 768 || isListView) return;
 
   const stage = document.getElementById('entries-panel');
   if (!stage) return;
@@ -157,17 +173,16 @@ function populateDetailContent(entry) {
   const detailContainer = document.getElementById('detail-content');
   if (!detailContainer) return;
 
-  const mediaHTML = entry.cover_image
-    ? (entry.media_type === 'video'
-        ? `<video src="${entry.cover_image}" controls autoplay muted loop></video>`
-        : `<img src="${entry.cover_image}" alt="${entry.title || ''}">`)
-    : '';
+  const imageSrc = resolveImagePath(entry.cover_image);
 
   detailContainer.innerHTML = `
     <h1 id="detail-title">${entry.title || ''}</h1>
-    <p id="detail-meta">${entry.year ? `${entry.year}` : ''}</p>
-    <div id="detail-media">${mediaHTML}</div>
-    <div id="detail-description">${entry.full_description || entry.description || ''}</div>
+    <p id="detail-meta">
+      ${entry.verlag ? `<span>${entry.verlag}</span>` : ''}
+      ${entry.jahr ? `<span> (${entry.jahr})</span>` : ''}
+    </p>
+    ${imageSrc ? `<div id="detail-media"><img src="${imageSrc}" alt="${entry.title || ''}"></div>` : ''}
+    <div id="detail-description">${entry.review || ''}</div>
   `;
 }
 
@@ -177,16 +192,16 @@ function resetToFallback() {
 
   detailContainer.innerHTML = `
     <div class="default-fallback">
-      <h1 class="fallback-title">Selected Works</h1>
+      <h1 class="fallback-title">Selected Reviews</h1>
       <p class="fallback-intro">
-        Select any project from the floating canvas to inspect its details, drawings, and metadata.
+        Select any book from the floating canvas to inspect its details and read the full review.
       </p>
     </div>
   `;
 }
 
 function showDetail(slug) {
-  const entry = entriesData.find(e => e.slug === slug);
+  const entry = entriesData.find((e, index) => (e.slug || `entry-${index}`) === slug);
   if (!entry) return;
 
   populateDetailContent(entry);
@@ -199,14 +214,13 @@ function openDetail() {
   const backdrop = document.getElementById('detail-backdrop');
 
   if (window.innerWidth <= 768) {
-    // 1. Capture both stage scroll AND window scroll before opening modal
     savedStageScroll = stage ? stage.scrollTop : 0;
     savedWindowScroll = window.scrollY || window.pageYOffset || 0;
   }
 
   if (panel) {
     panel.classList.add('open');
-    panel.scrollTop = 0; // Always reset detail view scroll to top
+    panel.scrollTop = 0;
   }
   if (backdrop) backdrop.classList.add('active');
 }
@@ -222,7 +236,6 @@ function closeDetail() {
   if (window.innerWidth > 768) {
     resetToFallback();
   } else {
-    // 2. Restore scroll position on next frame to prevent layout jumps
     requestAnimationFrame(() => {
       if (stage) stage.scrollTop = savedStageScroll;
       window.scrollTo(0, savedWindowScroll);
@@ -230,16 +243,8 @@ function closeDetail() {
   }
 }
 
-let isListView = false;
-
-// Add inside initSite():
-const toggleBtn = document.getElementById('view-toggle-btn');
-if (toggleBtn) {
-  toggleBtn.addEventListener('click', toggleDesktopView);
-}
-
 function toggleDesktopView() {
-  if (window.innerWidth <= 768) return; // Keep mobile behavior intact
+  if (window.innerWidth <= 768) return;
 
   const stage = document.getElementById('entries-panel');
   const toggleBtn = document.getElementById('view-toggle-btn');
@@ -248,24 +253,21 @@ function toggleDesktopView() {
   isListView = !isListView;
 
   if (isListView) {
-    // Pause animation floating loop
     if (flyAnimationId) {
       cancelAnimationFrame(flyAnimationId);
       flyAnimationId = null;
     }
     
-    // Reset individual inline transform styles from floating physics
     activeCards.forEach(item => {
       item.element.style.transform = '';
     });
 
-    stage.classList.add('list-mode');
+    if (stage) stage.classList.add('list-mode');
     if (btnText) btnText.textContent = 'Floating View';
   } else {
-    stage.classList.remove('list-mode');
+    if (stage) stage.classList.remove('list-mode');
     if (btnText) btnText.textContent = 'List View';
     
-    // Resume floating loop
     animate();
   }
 }
