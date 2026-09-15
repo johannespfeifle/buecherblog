@@ -5,11 +5,10 @@ media:
 content:
   - name: entries
     label: Project Entries
-    type: collection
-    path: content/entries
-    extension: json
+    type: file
+    path: content/entries.json
     format: json
-    filename: "{slug}"
+    list: true
     fields:
       - name: title
         label: Title

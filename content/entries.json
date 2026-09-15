@@ -1,0 +1,11 @@
+[
+  {
+    "title": "Sample Project",
+    "slug": "sample-project",
+    "year": 2026,
+    "media_type": "image",
+    "cover_image": "https://picsum.photos/800/600",
+    "description": "Short introductory summary of the project.",
+    "full_description": "Detailed write-up of the architectural project."
+  }
+]
