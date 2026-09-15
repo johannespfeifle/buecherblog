@@ -4,33 +4,24 @@ media:
 
 content:
   - name: entries
-    label: Project Entries
+    label: Book Reviews
     type: file
     path: content/entries.json
     format: json
     list: true
     fields:
       - name: title
-        label: Title
+        label: Titel
         type: string
-      - name: slug
-        label: Slug / Filename
-        type: string
-      - name: year
-        label: Year
-        type: number
-      - name: media_type
-        label: Media Type
-        type: select
-        options:
-          - image
-          - video
       - name: cover_image
-        label: Cover Image Path or URL
+        label: Cover Image
+        type: image
+      - name: verlag
+        label: Verlag
         type: string
-      - name: description
-        label: Short Description
-        type: text
-      - name: full_description
-        label: Full Description
+      - name: jahr
+        label: Jahr
+        type: number
+      - name: review
+        label: Review
         type: rich-text
