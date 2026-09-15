@@ -16,6 +16,9 @@ content:
       - name: cover_image
         label: Cover Image
         type: image
+      - name: autor
+        label: Autor
+        type: rich-text
       - name: verlag
         label: Verlag
         type: string
