@@ -1,0 +1,37 @@
+media:
+  input: assets/uploads
+  output: /assets/uploads
+
+content:
+  - name: entries
+    label: Project Entries
+    type: collection
+    path: content/entries
+    format: json
+    fields:
+      - name: title
+        label: Title
+        type: string
+      - name: slug
+        label: Slug / Filename
+        type: string
+      - name: year
+        label: Year
+        type: number
+      - name: media_type
+        label: Media Type
+        type: select
+        options:
+          - label: Image
+            value: image
+          - label: Video
+            value: video
+      - name: cover_image
+        label: Cover Image Path or URL
+        type: string
+      - name: description
+        label: Short Description
+        type: text
+      - name: full_description
+        label: Full Description
+        type: rich-text

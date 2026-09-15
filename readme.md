@@ -10,3 +10,12 @@ kann lokal getestet werden mit zwei temrinals:
 # data
 
 alles liegt entweder in media oder im json file 
+
+
+# github / visual code 
+
+update snync über diese commands im terminal
+
+git add .
+git commit -m "Update project structure and entries"
+git push
