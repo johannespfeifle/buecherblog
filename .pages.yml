@@ -7,7 +7,9 @@ content:
     label: Project Entries
     type: collection
     path: content/entries
+    extension: json
     format: json
+    filename: "{slug}"
     fields:
       - name: title
         label: Title
@@ -22,10 +24,8 @@ content:
         label: Media Type
         type: select
         options:
-          - label: Image
-            value: image
-          - label: Video
-            value: video
+          - image
+          - video
       - name: cover_image
         label: Cover Image Path or URL
         type: string
