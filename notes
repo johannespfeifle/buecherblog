@@ -1,0 +1,5 @@
+  <!-- Left Panel: Minimal List -->
+    <section class="entries-panel">
+      <div id="grid" class="entries-grid"></div>
+    </section>
+    

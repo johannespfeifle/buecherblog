@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minimalist Portfolio</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+
+  <main class="app-container">
+    <!-- Moving Cards (Desktop) / Vertical List (Mobile) -->
+    <section class="entries-panel" id="entries-panel"></section>
+
+    <!-- Overlay Backdrop -->
+    <div id="detail-backdrop" class="detail-backdrop"></div>
+
+    <!-- Detail Side Panel (Desktop) / Slide-Up Modal (Mobile) -->
+    <aside class="detail-panel" id="detail-panel">
+      <button id="detail-close-btn" class="detail-close-btn" aria-label="Go back">&larr; Back</button>
+      <div id="detail-content">
+        <div class="default-fallback">
+          <h1 class="fallback-title">Selected Works</h1>
+          <p class="fallback-intro">
+            Select any project to inspect its details, drawings, and metadata.
+          </p>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <button id="view-toggle-btn" class="view-toggle-btn" aria-label="Toggle Layout">
+    <span class="btn-text">List View</span>
+  </button>
+
+  <script src="./floating.js"></script>
+</body>
+</html>
