@@ -94,8 +94,20 @@ function renderEntries(entries) {
   const mobileHeader = document.createElement('div');
   mobileHeader.className = 'mobile-intro-header';
   mobileHeader.innerHTML = `
-    <h1>XXXX is a non-linear journey through territories of human imagination.</h1>
-    <p>(Klick auf eines der Cover)</p>
+    <div class="default-fallback">
+          <h1 class="fallback-title">Titel Blog</h1>
+          <p class="fallback-intro">(Klick auf eines der Cover)</p>
+
+          <div class="about-section">
+            <p class="about-text">
+              Beschreibung Blog  Beschreibung Blog Beschreibung Blog Beschreibung Blog Beschreibung Blog Beschreibung Blog Beschreibung Blog Beschreibung Blog Beschreibung Blog Beschreibung Blog Beschreibung Blog Beschreibung Blog
+            </p>
+          </div>
+
+          <a class="link" href="https://www.instagram.com/" target="_blank" rel="noopener noreferrer">
+            Instagram
+          </a>
+        </div>
   `;
   stage.appendChild(mobileHeader);
 
