@@ -7,6 +7,12 @@ let flyAnimationId = null;
 let savedStageScroll = 0;
 let savedWindowScroll = 0;
 let isListView = false;
+let fallbackHTML = '';
+
+const CARD_WIDTH = 160;
+const CARD_HEIGHT = 220;
+const SPEED = 0.5;
+const MOBILE_BREAKPOINT = 768;
 
 document.addEventListener('DOMContentLoaded', () => {
   initSite();
@@ -18,13 +24,16 @@ async function initSite() {
   const stage = document.getElementById('entries-panel');
   const toggleBtn = document.getElementById('view-toggle-btn');
 
+  const detailContainer = document.getElementById('detail-content');
+  fallbackHTML = detailContainer ? detailContainer.innerHTML : '';
+
   if (closeBtn) closeBtn.addEventListener('click', closeDetail);
   if (backdrop) backdrop.addEventListener('click', closeDetail);
   if (toggleBtn) toggleBtn.addEventListener('click', toggleDesktopView);
 
   if (stage) {
     stage.addEventListener('click', (e) => {
-      if (e.target === stage && window.innerWidth > 768) {
+      if (e.target === stage && window.innerWidth > MOBILE_BREAKPOINT) {
         resetToFallback();
       }
     });
@@ -35,11 +44,21 @@ async function initSite() {
   });
 
   window.addEventListener('resize', () => {
-    if (window.innerWidth <= 768 && flyAnimationId) {
-      cancelAnimationFrame(flyAnimationId);
-      flyAnimationId = null;
-    } else if (window.innerWidth > 768 && !flyAnimationId && activeCards.length > 0 && !isListView) {
-      animate();
+    const stage = document.getElementById('entries-panel');
+    if (!stage) return;
+
+    if (window.innerWidth <= MOBILE_BREAKPOINT) {
+      if (flyAnimationId) {
+        cancelAnimationFrame(flyAnimationId);
+        flyAnimationId = null;
+      }
+      activeCards.forEach(item => { item.element.style.transform = ''; });
+      stage.classList.add('list-mode');
+    } else {
+      stage.classList.toggle('list-mode', isListView);
+      if (!flyAnimationId && activeCards.length > 0 && !isListView) {
+        animate();
+      }
     }
   });
 
@@ -75,41 +94,44 @@ function renderEntries(entries) {
   const mobileHeader = document.createElement('div');
   mobileHeader.className = 'mobile-intro-header';
   mobileHeader.innerHTML = `
-    <h1>Selected Reviews</h1>
-    <p>Select a book below to inspect its details and read the review.</p>
+    <h1>XXXX is a non-linear journey through territories of human imagination.</h1>
+    <p>(Klick auf eines der Cover)</p>
   `;
   stage.appendChild(mobileHeader);
 
+  if (window.innerWidth <= MOBILE_BREAKPOINT) stage.classList.add('list-mode');
+
   const stageWidth = stage.clientWidth || window.innerWidth * 0.618;
   const stageHeight = stage.clientHeight || window.innerHeight;
-  const cardWidth = 160;
-  const cardHeight = 220;
 
   entries.forEach((entry, index) => {
+    const imageSrc = resolveImagePath(entry.cover_image);
+
     const card = document.createElement('article');
-    card.className = 'entry-card';
-    
+    card.className = imageSrc ? 'entry-card' : 'entry-card entry-card--text';
+
     // Fallback slug generation if slug is omitted in JSON
     const cardSlug = entry.slug || `entry-${index}`;
     card.setAttribute('data-slug', cardSlug);
 
-    const imageSrc = resolveImagePath(entry.cover_image);
     const mediaHTML = imageSrc
       ? `<img class="entry-image" src="${imageSrc}" alt="${entry.title || 'Book cover'}">`
       : '';
 
     card.innerHTML = `
-      ${mediaHTML}
-      <h2>${entry.title || 'Untitled'}</h2>
+    ${mediaHTML}
+    <div class="card-info">
+        <h2>${entry.title || 'Untitled'}</h2>
+        ${entry.autor ? `<p class="card-author">${entry.autor}</p>` : ''}
+        ${entry.verlag ? `<p class="card-publisher">${entry.verlag}</p>` : ''}
+    </div>
     `;
-
-    const speedMultiplier = 0.5;
     const state = {
       element: card,
-      x: Math.random() * Math.max(0, stageWidth - cardWidth),
-      y: Math.random() * Math.max(0, stageHeight - cardHeight),
-      vx: (Math.random() - 0.5) * speedMultiplier,
-      vy: (Math.random() - 0.5) * speedMultiplier,
+      x: Math.random() * Math.max(0, stageWidth - CARD_WIDTH),
+      y: Math.random() * Math.max(0, stageHeight - CARD_HEIGHT),
+      vx: (Math.random() - 0.5) * SPEED,
+      vy: (Math.random() - 0.5) * SPEED,
       slug: cardSlug
     };
 
@@ -126,22 +148,20 @@ function renderEntries(entries) {
     activeCards.push(state);
   });
 
-  if (window.innerWidth > 768 && !isListView) {
+  if (window.innerWidth > MOBILE_BREAKPOINT && !isListView) {
     if (flyAnimationId) cancelAnimationFrame(flyAnimationId);
     animate();
   }
 }
 
 function animate() {
-  if (window.innerWidth <= 768 || isListView) return;
+  if (window.innerWidth <= MOBILE_BREAKPOINT || isListView) return;
 
   const stage = document.getElementById('entries-panel');
   if (!stage) return;
 
   const stageWidth = stage.clientWidth;
   const stageHeight = stage.clientHeight;
-  const cardWidth = 160;
-  const cardHeight = 220;
 
   activeCards.forEach((item) => {
     item.x += item.vx;
@@ -150,16 +170,16 @@ function animate() {
     if (item.x <= 0) {
       item.x = 0;
       item.vx *= -1;
-    } else if (item.x >= stageWidth - cardWidth) {
-      item.x = Math.max(0, stageWidth - cardWidth);
+    } else if (item.x >= stageWidth - CARD_WIDTH) {
+      item.x = Math.max(0, stageWidth - CARD_WIDTH);
       item.vx *= -1;
     }
 
     if (item.y <= 0) {
       item.y = 0;
       item.vy *= -1;
-    } else if (item.y >= stageHeight - cardHeight) {
-      item.y = Math.max(0, stageHeight - cardHeight);
+    } else if (item.y >= stageHeight - CARD_HEIGHT) {
+      item.y = Math.max(0, stageHeight - CARD_HEIGHT);
       item.vy *= -1;
     }
 
@@ -169,35 +189,59 @@ function animate() {
   flyAnimationId = requestAnimationFrame(animate);
 }
 
+function formatReview(text) {
+  const str = (text || '').trim();
+
+  // Content saved by the CMS rich-text widget is already HTML — pass through as-is
+  if (/<\/?[a-z][\s\S]*>/i.test(str)) return str;
+
+  // Adapt to how the CMS stored line breaks:
+  // - blank-line separation (\n\n) → paragraphs
+  // - single newlines only (plain textarea) → treat each line as a paragraph
+  const parts = /\n\s*\n/.test(str) ? str.split(/\n\s*\n/) : str.split(/\n+/);
+
+  return parts
+    .map(p => p.trim().replace(/\*([^*\n]+)\*/g, '<em>$1</em>'))
+    .filter(Boolean)
+    .map((p) => {
+      if (p.startsWith('>')) {
+        return `<blockquote>${p.replace(/^\s*>\s?/, '')}</blockquote>`;
+      }
+      return `<p>${p}</p>`;
+    })
+    .join('');
+}
+
 function populateDetailContent(entry) {
   const detailContainer = document.getElementById('detail-content');
   if (!detailContainer) return;
+  const panel = document.getElementById('detail-panel');
 
   const imageSrc = resolveImagePath(entry.cover_image);
 
   detailContainer.innerHTML = `
     <h1 id="detail-title">${entry.title || ''}</h1>
     <p id="detail-meta">
-      ${entry.verlag ? `<span>${entry.verlag}</span>` : ''}
-      ${entry.jahr ? `<span> (${entry.jahr})</span>` : ''}
+      ${entry.autor ? `<span>${entry.autor}</span>` : ''}
+      ${entry.verlag ? `<span> · ${entry.verlag}</span>` : ''}
+      ${entry.seitenzahl ? `<span> · ${entry.seitenzahl} Seiten</span>` : ''}
+      ${entry.jahr ? `<span> · ${entry.jahr}</span>` : ''}
     </p>
     ${imageSrc ? `<div id="detail-media"><img src="${imageSrc}" alt="${entry.title || ''}"></div>` : ''}
-    <div id="detail-description">${entry.review || ''}</div>
+    <div id="detail-description">${formatReview(entry.review)}</div>
+    <button class="back-to-top" type="button">↑ Nach oben</button>
   `;
+
+  const backBtn = detailContainer.querySelector('.back-to-top');
+  if (backBtn && panel) {
+    backBtn.addEventListener('click', () => { panel.scrollTop = 0; });
+  }
 }
 
 function resetToFallback() {
   const detailContainer = document.getElementById('detail-content');
   if (!detailContainer) return;
-
-  detailContainer.innerHTML = `
-    <div class="default-fallback">
-      <h1 class="fallback-title">Selected Reviews</h1>
-      <p class="fallback-intro">
-        Select any book from the floating canvas to inspect its details and read the full review.
-      </p>
-    </div>
-  `;
+  detailContainer.innerHTML = fallbackHTML;
 }
 
 function showDetail(slug) {
@@ -213,7 +257,7 @@ function openDetail() {
   const panel = document.getElementById('detail-panel');
   const backdrop = document.getElementById('detail-backdrop');
 
-  if (window.innerWidth <= 768) {
+  if (window.innerWidth <= MOBILE_BREAKPOINT) {
     savedStageScroll = stage ? stage.scrollTop : 0;
     savedWindowScroll = window.scrollY || window.pageYOffset || 0;
   }
@@ -233,7 +277,7 @@ function closeDetail() {
   if (panel) panel.classList.remove('open');
   if (backdrop) backdrop.classList.remove('active');
 
-  if (window.innerWidth > 768) {
+  if (window.innerWidth > MOBILE_BREAKPOINT) {
     resetToFallback();
   } else {
     requestAnimationFrame(() => {
@@ -244,7 +288,7 @@ function closeDetail() {
 }
 
 function toggleDesktopView() {
-  if (window.innerWidth <= 768) return;
+  if (window.innerWidth <= MOBILE_BREAKPOINT) return;
 
   const stage = document.getElementById('entries-panel');
   const toggleBtn = document.getElementById('view-toggle-btn');

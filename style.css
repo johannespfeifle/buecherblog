@@ -10,34 +10,7 @@ body {
   overflow: hidden;
   width: 100vw;
   height: 100vh;
-}
-
-/* Header & Navigation */
-header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  z-index: 100;
-  pointer-events: none;
-}
-
-header * {
-  pointer-events: auto;
-}
-
-ul.nav {
-  display: flex;
-  justify-content: space-between;
-  list-style: none;
-  margin: 0;
-  padding: 1rem 2rem;
-}
-
-.navtext {
-  text-decoration: none;
-  color: inherit;
-  font-size: 0.85rem;
+  height: 100dvh;
 }
 
 /* App Container */
@@ -45,12 +18,13 @@ ul.nav {
   display: flex;
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   overflow: hidden;
   position: relative;
 }
 
 /* ==========================================
-   DESKTOP DEFAULT
+   DESKTOP DEFAULT (Floating Canvas State)
    ========================================== */
 
 /* Left Panel: Canvas area for floating cards */
@@ -63,7 +37,7 @@ ul.nav {
   cursor: pointer;
 }
 
-/* Desktop Floating Card Styles (Canvas State) */
+/* Desktop Floating Card Styles */
 .entry-card {
   position: absolute;
   top: 0;
@@ -77,7 +51,10 @@ ul.nav {
 
 .entry-card img,
 .entry-card video,
-.entry-card h2 {
+.entry-card .card-info,
+.entry-card h2,
+.entry-card .card-author,
+.entry-card .card-publisher {
   pointer-events: none;
 }
 
@@ -87,9 +64,41 @@ ul.nav {
   display: block;
 }
 
-/* Hide title on floating canvas card */
-.entry-card h2 {
+/* Hide text content on floating canvas cards */
+.entry-card h2,
+.entry-card .card-author,
+.entry-card .card-publisher {
   display: none;
+}
+
+/* Text-only fallback: cards without a cover image (floating mode only) */
+#entries-panel:not(.list-mode) .entry-card.entry-card--text {
+  min-height: 220px;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 2px;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+}
+
+#entries-panel:not(.list-mode) .entry-card.entry-card--text .card-info {
+  flex: 1;
+  justify-content: center;
+  text-align: center;
+}
+
+#entries-panel:not(.list-mode) .entry-card.entry-card--text h2 {
+  display: block;
+  font-size: 1rem;
+  line-height: 1.3;
+  margin: 0 0 0.5rem 0;
+  font-weight: 500;
+}
+
+#entries-panel:not(.list-mode) .entry-card.entry-card--text .card-author,
+#entries-panel:not(.list-mode) .entry-card.entry-card--text .card-publisher {
+  display: block;
 }
 
 /* Right Panel: Permanent 38.2vw Split Panel */
@@ -103,6 +112,7 @@ ul.nav {
   box-sizing: border-box;
   padding: 5rem 2.5rem 2.5rem 2.5rem;
   overflow-y: auto;
+  scroll-behavior: smooth;
   z-index: 20;
 }
 
@@ -137,14 +147,49 @@ ul.nav {
 }
 
 #detail-description {
-  font-size: 1.15rem;
-  line-height: 1.45;
+  font-size: 1.1rem;
+  line-height: 1.5;
+  color: #1a1a1a;
+  max-width: 55ch;
+  padding-top: 1.25rem;
+}
+
+#detail-description p {
+  margin: 0 0 1.4em 0;
+}
+
+#detail-description em {
+  font-style: italic;
+}
+
+#detail-description blockquote {
+  margin: 1.5em 0;
+  padding: 0.25em 0 0.25em 1.25em;
+  border-left: 3px solid #111;
+  font-style: italic;
+  color: #444;
+}
+
+.back-to-top {
+  display: block;
+  margin-top: 2rem;
+  padding: 0;
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: #666;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.back-to-top:hover {
   color: #000;
 }
 
 #detail-media {
   margin: 0.5rem 0 1rem 0;
-  width: 100%;
+  max-width: 180px;
 }
 
 #detail-media img,
@@ -174,6 +219,53 @@ ul.nav {
   line-height: 1.5;
   color: #555;
   margin: 0;
+}
+
+.about-section {
+  margin-top: 2rem;
+  padding-top: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.about-title {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #666666;
+  margin: 0;
+}
+
+.about-text {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #444444;
+  margin: 0;
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1.25rem;
+  font-size: 0.95rem;
+  color: #000000;
+  text-decoration: none;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.link:hover {
+  border-color: #000000;
+  color: #ffbaef;
+}
+
+.link::before {
+  content: "";
+  width: 16px;
+  height: 16px;
+  display: inline-block;
+  background-color: currentColor;
 }
 
 .detail-backdrop {
@@ -208,6 +300,80 @@ ul.nav {
 
 
 /* ==========================================
+   SHARED CARD INFO STYLES
+   ========================================== */
+.card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  text-align: left;
+}
+
+.card-author {
+  font-size: 0.88rem;
+  font-style: italic;
+  color: #444444;
+  margin: 0;
+}
+
+.card-publisher {
+  font-size: 0.8rem;
+  color: #666666;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin: 0;
+}
+
+
+/* ==========================================
+   SHARED LIST LAYOUT (desktop list mode + mobile)
+   ========================================== */
+#entries-panel.list-mode .entry-card {
+  position: relative;
+  top: auto;
+  left: auto;
+  transform: none;
+  width: 100%;
+  height: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 0.75rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+#entries-panel.list-mode .entry-card:hover {
+  background-color: #ffe1fd;
+  transform: translateY(-2px);
+}
+
+#entries-panel.list-mode .entry-card img,
+#entries-panel.list-mode .entry-card video {
+  width: 70px;
+  height: 95px;
+  min-width: 70px;
+  object-fit: cover;
+  border-radius: 2px;
+}
+
+#entries-panel.list-mode .entry-card h2 {
+  display: block;
+  font-size: 1rem;
+  text-align: left;
+  margin: 0;
+  font-weight: 500;
+}
+
+#entries-panel.list-mode .card-author,
+#entries-panel.list-mode .card-publisher {
+  display: block;
+  line-height: 1.3;
+}
+
+
+/* ==========================================
    DESKTOP LIST MODE OVERRIDES
    ========================================== */
 @media (min-width: 769px) {
@@ -221,42 +387,7 @@ ul.nav {
   }
 
   #entries-panel.list-mode .entry-card {
-    position: relative !important;
-    top: auto !important;
-    left: auto !important;
-    transform: none !important;
-    width: 100% !important;
     max-width: 600px;
-    height: auto;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 0.75rem;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.2s ease, transform 0.2s ease;
-  }
-
-  #entries-panel.list-mode .entry-card:hover {
-    background-color: #ffe1fd;
-    transform: translateY(-2px);
-  }
-
-  #entries-panel.list-mode .entry-card img,
-  #entries-panel.list-mode .entry-card video {
-    width: 90px;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 2px;
-  }
-
-  /* Restore title display for list items */
-  #entries-panel.list-mode .entry-card h2 {
-    display: block;
-    font-size: 1rem;
-    text-align: left;
-    margin: 0;
-    font-weight: 500;
   }
 }
 
@@ -279,6 +410,7 @@ ul.nav {
     width: 100vw;
     height: 100%;
     min-height: 100vh;
+    min-height: 100dvh;
     overflow-y: auto;
     padding: 4.5rem 1.25rem 2rem 1.25rem;
     display: flex;
@@ -314,41 +446,9 @@ ul.nav {
     margin: 0;
   }
 
-  /* Mobile List Item Card Layout */
-  #entries-panel .entry-card {
-    position: relative !important;
-    top: auto !important;
-    left: auto !important;
-    transform: none !important;
-    width: 100% !important;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 0.75rem;
-    border-radius: 4px;
-    transition: background-color 0.2s ease, transform 0.2s ease;
-  }
-
-  #entries-panel .entry-card:hover {
-    background-color: #ffe1fd;
-    transform: translateY(-2px);
-  }
-
-  #entries-panel .entry-card img,
-  #entries-panel .entry-card video {
-    width: 100px;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 2px;
-  }
-
-  /* Restore title display for mobile list items */
-  #entries-panel .entry-card h2 {
-    display: block;
-    font-size: 1rem;
-    text-align: left;
-    margin: 0;
-    font-weight: 500;
+  /* Cards reuse the shared list layout; only lift the desktop max-width */
+  #entries-panel.list-mode .entry-card {
+    max-width: none;
   }
 
   /* Mobile Detail Slide-over Panel */
@@ -358,11 +458,13 @@ ul.nav {
     left: 0;
     width: 100vw;
     height: 100vh;
+    height: 100dvh;
     z-index: 100;
     background: #ffffff;
     border-left: none;
     padding: 4.5rem 1.5rem 3rem 1.5rem;
     overflow-y: auto;
+    scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
     transform: translateY(100%);
     transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -409,7 +511,7 @@ ul.nav {
     pointer-events: auto;
   }
 
-  /* Hide view toggle on small screens where full list is default */
+  /* Hide view toggle on small screens */
   .view-toggle-btn {
     display: none;
   }
