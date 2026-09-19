@@ -22,6 +22,9 @@ content:
       - name: verlag
         label: Verlag
         type: string
+      - name: seitenzahl
+        label: Seitenzahl
+        type: number
       - name: jahr
         label: Jahr
         type: number
